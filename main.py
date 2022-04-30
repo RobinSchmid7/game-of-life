@@ -2,17 +2,26 @@ import time
 import pygame
 import numpy as np
 
-
+# Color parameters
 COLOR_BG = (10, 10, 10)
 COLOR_GRID = (40, 40, 40)
-COLOR_DIE_NEXT = (170, 170, 170)
-COLOR_ALIVE_NEXT = (255, 255, 255)
+COLOR_DIE_NEXT = (170, 0, 0)
+COLOR_ALIVE_NEXT = (0, 170, 0)
+
+# Screen parameters
+SCREEN_WIDTH = 800
+SCREEN_HEIGTH = 600
+RESOLUTION = 10
+
+# Simulation parameters
+UPDATE_FREQUENCY = 20
 
 
 def update(screen, cells, size, with_progress=False):
     updated_cells = np.zeros((cells.shape[0], cells.shape[1]))
 
     for row, col in np.ndindex(cells.shape):
+        # Implement survival logic
         alive = np.sum(cells[row-1:row+2, col-1:col+2]) - cells[row, col]
         color = COLOR_BG if cells[row, col] == 0 else COLOR_ALIVE_NEXT
 
@@ -35,11 +44,22 @@ def update(screen, cells, size, with_progress=False):
     return updated_cells
 
 
+def load_starting_config(cols, rows):
+    cells = np.zeros((cols, rows))
+
+    for row, col in np.ndindex(cells.shape):
+        if row % 2 == 0 and col % 2 == 0 or row % 2 == 1 and col % 2 == 1:
+            cells[row, col] = 1
+
+    return cells
+
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((800, 600))
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGTH))
+    pygame.display.set_caption('Game of Life')
 
-    cells = np.zeros((60, 80))
+    cells = load_starting_config(SCREEN_HEIGTH // 10, SCREEN_WIDTH // 10)
+
     screen.fill(COLOR_GRID)
     update(screen, cells, 10)
 
@@ -54,11 +74,13 @@ def main():
                 pygame.quit()
                 return
             elif event.type == pygame.KEYDOWN:
+                # Press space to run game
                 if event.key == pygame.K_SPACE:
                     running = not running
                     update(screen, cells, 10)
                     pygame.display.update()
             if pygame.mouse.get_pressed()[0]:
+                # Create new alive cells with mouse
                 pos = pygame.mouse.get_pos()
                 cells[pos[1] // 10, pos[0] // 10] = 1
                 update(screen, cells, 10)
@@ -70,7 +92,7 @@ def main():
             cells = update(screen, cells, 10, with_progress=True)
             pygame.display.update()
 
-        time.sleep(0.001)
+        time.sleep(1/UPDATE_FREQUENCY)
 
 
 if __name__ == '__main__':
